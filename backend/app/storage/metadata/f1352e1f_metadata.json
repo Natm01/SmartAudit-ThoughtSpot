@@ -1,0 +1,15 @@
+{
+  "executionId": "f1352e1f",
+  "projectId": "00041796",
+  "testType": "libro_diario_import",
+  "period": "2025-07-01 a 2025-07-31",
+  "version": 1,
+  "originalFileName": "Ejemplo2.txt",
+  "fileType": "txt",
+  "fileSize": 6215,
+  "uploadDate": "2025-07-15T13:09:32.014144",
+  "userId": "maria.garcia",
+  "userName": "María García",
+  "status": "error",
+  "filePath": "C:\\Users\\mngonzalez\\Downloads\\smartaudit-project\\smartaudit\\backend\\app\\services\\..\\storage\\files\\f1352e1f_Ejemplo2.txt"
+}

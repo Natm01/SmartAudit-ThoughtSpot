@@ -1,0 +1,65 @@
+{
+  "carlos.rodriguez": {
+    "id": "carlos.rodriguez",
+    "name": "Carlos Rodríguez",
+    "email": "carlos.rodriguez@grantthornton.es",
+    "role": "AUDITOR_SPA",
+    "roleName": "Auditor SPA",
+    "department": "Auditoría",
+    "projects": ["00041796", "00041792", "00042921", "00042910", "00042861"],
+    "permissions": {
+      "canAccessLibroDiario": true,
+      "canAccessAnalisisJET": true,
+      "canAccessAnalisisRiesgos": true,
+      "canAccessAnalisisObsolescencia": true,
+      "canAccessThoughtSpot": true,
+      "canManageProjects": true,
+      "canViewAllProjects": false
+    },
+    "status": "active",
+    "createdAt": "2024-01-15T09:00:00Z",
+    "lastLogin": "2024-06-04T10:30:00Z"
+  },
+  "maria.garcia": {
+    "id": "maria.garcia",
+    "name": "María García",
+    "email": "maria.garcia@grantthornton.es",
+    "role": "SENIOR_AUDITOR",
+    "roleName": "Auditor Senior",
+    "department": "Auditoría",
+    "projects": ["00041796", "00041792"],
+    "permissions": {
+      "canAccessLibroDiario": true,
+      "canAccessAnalisisJET": false,
+      "canAccessAnalisisRiesgos": true,
+      "canAccessAnalisisObsolescencia": false,
+      "canAccessThoughtSpot": true,
+      "canManageProjects": false,
+      "canViewAllProjects": false
+    },
+    "status": "active",
+    "createdAt": "2024-02-01T10:15:00Z",
+    "lastLogin": "2024-06-03T14:20:00Z"
+  },
+  "juan.lopez": {
+    "id": "juan.lopez",
+    "name": "Juan López",
+    "email": "juan.lopez@grantthornton.es",
+    "role": "JUNIOR_AUDITOR",
+    "roleName": "Auditor Junior",
+    "department": "Auditoría",
+    "projects": ["00042921"],
+    "permissions": {
+      "canAccessLibroDiario": true,
+      "canAccessAnalisisJET": false,
+      "canAccessAnalisisRiesgos": false,
+      "canAccessAnalisisObsolescencia": false,
+      "canAccessThoughtSpot": true,
+      "canManageProjects": false,
+      "canViewAllProjects": false
+    },
+    "status": "active",
+    "createdAt": "2024-03-10T08:30:00Z",
+    "lastLogin": "2024-06-02T16:45:00Z"
+  }
+}

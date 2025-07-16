@@ -1,0 +1,138 @@
+{
+  "validation_templates": {
+    "libro_diario_success": {
+      "status": "ok",
+      "validations": [
+        {
+          "field": "fecha",
+          "status": "ok",
+          "message": "Formato de fecha válido",
+          "details": "Todas las fechas están en formato correcto (YYYY-MM-DD)"
+        },
+        {
+          "field": "debe_haber",
+          "status": "ok",
+          "message": "Suma cero verificada",
+          "details": "Todos los asientos cuadran correctamente - Balance perfecto"
+        },
+        {
+          "field": "cuentas",
+          "status": "ok",
+          "message": "Estructura de cuentas válida",
+          "details": "Plan contable correcto - 245 cuentas identificadas"
+        },
+        {
+          "field": "importes",
+          "status": "ok",
+          "message": "Importes numéricos válidos",
+          "details": "Todos los importes son numéricos con formato correcto"
+        },
+        {
+          "field": "asientos",
+          "status": "ok",
+          "message": "Numeración de asientos correcta",
+          "details": "Secuencia de asientos sin gaps - 1,245 asientos procesados"
+        }
+      ]
+    },
+    "libro_diario_warning": {
+      "status": "warning",
+      "validations": [
+        {
+          "field": "fecha",
+          "status": "ok",
+          "message": "Formato de fecha válido",
+          "details": "Todas las fechas están en formato correcto"
+        },
+        {
+          "field": "debe_haber",
+          "status": "warning",
+          "message": "Algunos asientos con diferencias menores",
+          "details": "3 asientos con diferencias menores a 0.01€ - Posibles errores de redondeo"
+        },
+        {
+          "field": "cuentas",
+          "status": "warning",
+          "message": "Cuentas auxiliares sin configurar",
+          "details": "15 subcuentas no tienen cuenta principal asignada"
+        },
+        {
+          "field": "importes",
+          "status": "warning",
+          "message": "Algunos importes con formato irregular",
+          "details": "5 registros con más de 2 decimales - Se redondeará automáticamente"
+        },
+        {
+          "field": "asientos",
+          "status": "ok",
+          "message": "Numeración de asientos correcta",
+          "details": "Secuencia de asientos correcta"
+        }
+      ]
+    },
+    "libro_diario_error": {
+      "status": "error",
+      "validations": [
+        {
+          "field": "fecha",
+          "status": "error",
+          "message": "Formato de fecha inválido",
+          "details": "15 registros con formato de fecha incorrecto - Formatos encontrados: DD/MM/YYYY, MM-DD-YYYY"
+        },
+        {
+          "field": "debe_haber",
+          "status": "error",
+          "message": "Asientos descuadrados",
+          "details": "8 asientos no cuadran - Diferencia total: 125.50€ - Asientos: 245, 267, 289, 301, 345, 378, 401, 423"
+        },
+        {
+          "field": "cuentas",
+          "status": "error",
+          "message": "Cuentas inexistentes en plan contable",
+          "details": "23 cuentas no están definidas en el plan contable estándar"
+        },
+        {
+          "field": "importes",
+          "status": "error",
+          "message": "Importes no numéricos encontrados",
+          "details": "12 registros con texto en lugar de números - Valores encontrados: 'N/A', 'Sin importe', '---'"
+        },
+        {
+          "field": "asientos",
+          "status": "warning",
+          "message": "Gaps en numeración de asientos",
+          "details": "Faltan los asientos: 156, 234, 456 - Puede indicar eliminaciones no controladas"
+        }
+      ]
+    },
+    "sumas_saldos_success": {
+      "status": "ok",
+      "validations": [
+        {
+          "field": "estructura",
+          "status": "ok",
+          "message": "Estructura del archivo correcta",
+          "details": "Todas las columnas requeridas están presentes"
+        },
+        {
+          "field": "balance",
+          "status": "ok",
+          "message": "Balance de sumas y saldos correcto",
+          "details": "Suma de saldos deudores = Suma de saldos acreedores"
+        },
+        {
+          "field": "cuentas",
+          "status": "ok",
+          "message": "Plan de cuentas válido",
+          "details": "Todas las cuentas siguen la estructura del plan contable"
+        },
+        {
+          "field": "importes",
+          "status": "ok",
+          "message": "Importes válidos",
+          "details": "Todos los importes son numéricos y positivos"
+        }
+      ]
+    }
+  }
+}

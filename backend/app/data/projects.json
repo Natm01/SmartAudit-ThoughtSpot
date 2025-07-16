@@ -1,0 +1,84 @@
+{
+  "projects": [
+    {
+      "id": "00041796",
+      "name": "HOTELES TURISTICOS UNIDOS, S.A.",
+      "type": "Audit CCAA individuales obligatoria",
+      "client": "HOTELES TURISTICOS UNIDOS, S.A.",
+      "description": "Auditoría de cuentas anuales individuales obligatoria",
+      "status": "active",
+      "startDate": "2024-01-01",
+      "endDate": "2024-12-31"
+    },
+    {
+      "id": "00041792",
+      "name": "EUROSTARS HOTEL COMPANY, S.L.",
+      "type": "Audit CCAA individuales obligatoria",
+      "client": "EUROSTARS HOTEL COMPANY, S.L.",
+      "description": "Auditoría de cuentas anuales individuales obligatoria",
+      "status": "active",
+      "startDate": "2024-01-01",
+      "endDate": "2024-12-31"
+    },
+    {
+      "id": "00042921",
+      "name": "HOWDEN SPAIN, S.L.",
+      "type": "Audit CCAA individuales obligatoria",
+      "client": "HOWDEN SPAIN, S.L.",
+      "description": "Auditoría de cuentas anuales individuales obligatoria",
+      "status": "active",
+      "startDate": "2024-01-01",
+      "endDate": "2024-12-31"
+    },
+    {
+      "id": "00042910",
+      "name": "TRUXTON, S.L.",
+      "type": "Audit CCAA consolidadas obligatoria",
+      "client": "TRUXTON, S.L.",
+      "description": "Auditoría de cuentas anuales consolidadas obligatoria",
+      "status": "active",
+      "startDate": "2024-01-01",
+      "endDate": "2024-12-31"
+    },
+    {
+      "id": "00042861",
+      "name": "TEYCOMUR MAQUINARIA, S.L.",
+      "type": "Audit CCAA individuales obligatoria",
+      "client": "TEYCOMUR MAQUINARIA, S.L.",
+      "description": "Auditoría de cuentas anuales individuales obligatoria",
+      "status": "active",
+      "startDate": "2024-01-01",
+      "endDate": "2024-12-31"
+    },
+    {
+      "id": "00042845",
+      "name": "QUATRO ETIQUETAS, S.L.",
+      "type": "Audit CCAA individuales obligatoria",
+      "client": "QUATRO ETIQUETAS, S.L.",
+      "description": "Auditoría de cuentas anuales individuales obligatoria",
+      "status": "active",
+      "startDate": "2024-01-01",
+      "endDate": "2024-12-31"
+    },
+    {
+      "id": "00042768",
+      "name": "BRICOGROUP INTEGRAL EUROPA, S.L.",
+      "type": "Audit CCAA individuales voluntaria",
+      "client": "BRICOGROUP INTEGRAL EUROPA, S.L.",
+      "description": "Auditoría de cuentas anuales individuales voluntaria",
+      "status": "active",
+      "startDate": "2024-01-01",
+      "endDate": "2024-12-31"
+    },
+    {
+      "id": "00042486",
+      "name": "SOCIEDAD TITULAR DEL PUERTO DEPORTIVO DE ADRA, S.L.",
+      "type": "Audit CCAA individuales obligatoria",
+      "client": "SOCIEDAD TITULAR DEL PUERTO DEPORTIVO DE ADRA, S.L.",
+      "description": "Auditoría de cuentas anuales individuales obligatoria",
+      "status": "active",
+      "startDate": "2024-01-01",
+      "endDate": "2024-12-31"
+    }
+  ]
+}

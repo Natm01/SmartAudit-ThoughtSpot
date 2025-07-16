@@ -1,0 +1,15 @@
+{
+  "executionId": "8c5667f8",
+  "projectId": "00041796",
+  "testType": "libro_diario_import",
+  "period": "2025-06-12 a 2025-06-21",
+  "version": 1,
+  "originalFileName": "Ejemplo2.txt",
+  "fileType": "txt",
+  "fileSize": 6215,
+  "uploadDate": "2025-06-12T22:48:19.373967",
+  "userId": "carlos.rodriguez",
+  "userName": "Carlos Rodríguez",
+  "status": "pending",
+  "filePath": "C:\\Users\\mngonzalez\\Downloads\\smartaudit-project\\smartaudit\\backend\\app\\services\\..\\storage\\files\\8c5667f8_Ejemplo2.txt"
+}
