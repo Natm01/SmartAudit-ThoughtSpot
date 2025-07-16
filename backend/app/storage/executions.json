@@ -169,7 +169,41 @@
       "validationResults": [],
       "convertedFiles": [],
       "errorMessage": null
+    },
+    {
+      "executionId": "0235486e",
+      "projectId": "00041796",
+      "projectName": "HOTELES TURISTICOS UNIDOS, S.A.",
+      "testType": "libro_diario_import",
+      "period": "2025-06-30 a 2025-07-31",
+      "userId": "maria.garcia",
+      "userName": "María García",
+      "executionDate": "2025-07-16T14:28:49.459037",
+      "status": "error",
+      "version": 1,
+      "libroDiarioFile": null,
+      "sumasSaldosFile": null,
+      "validationResults": [],
+      "convertedFiles": [],
+      "errorMessage": "Errores encontrados en la validación"
+    },
+    {
+      "executionId": "303fc513",
+      "projectId": "00041796",
+      "projectName": "HOTELES TURISTICOS UNIDOS, S.A.",
+      "testType": "libro_diario_import",
+      "period": "2025-07-16 a 2025-07-31",
+      "userId": "maria.garcia",
+      "userName": "María García",
+      "executionDate": "2025-07-16T14:29:14.099998",
+      "status": "error",
+      "version": 1,
+      "libroDiarioFile": null,
+      "sumasSaldosFile": null,
+      "validationResults": [],
+      "convertedFiles": [],
+      "errorMessage": "Errores encontrados en la validación"
     }
   ],
-  "lastUpdated": "2025-07-15T13:10:20.193259"
+  "lastUpdated": "2025-07-16T14:29:15.351288"
 }
