@@ -30,3 +30,8 @@ class UserResponse(BaseModel):
     user: User
     success: bool = True
     message: str = "Usuario obtenido correctamente"
+
+class UsersListResponse(BaseModel):
+    users: List[User]
+    success: bool = True
+    message: str = "Usuarios obtenidos correctamente"

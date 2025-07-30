@@ -1,0 +1,15 @@
+{
+  "executionId": "08292402",
+  "projectId": "00041796",
+  "testType": "libro_diario_import",
+  "period": "undefined",
+  "version": 2,
+  "originalFileName": "SumasSaldos_CYGNUS.xlsx",
+  "fileType": "xlsx",
+  "fileSize": 27117,
+  "uploadDate": "2025-07-30T18:40:03.794960",
+  "userId": "maria.garcia",
+  "userName": "María García",
+  "status": "pending",
+  "filePath": "C:\\Users\\mngonzalez\\Downloads\\smartaudit-project\\smartaudit\\backend\\app\\services\\..\\storage\\files\\08292402_SumasSaldos_CYGNUS_2.xlsx"
+}

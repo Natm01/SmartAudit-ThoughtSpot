@@ -22,14 +22,21 @@ user_service = UserService()
 project_service = ProjectService()
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_file(
-    file: UploadFile = File(...),
+async def upload_files(
+    files: List[UploadFile] = File(...),  # Cambio: ahora acepta múltiples archivos
     project_id: str = Form(...),
     period: str = Form(...),
     test_type: str = Form("libro_diario_import")
 ):
-    """Subir archivo contable"""
+    """Subir múltiples archivos contables"""
     try:
+        # Validar que se enviaron archivos
+        if not files or len(files) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Debe enviar al menos un archivo"
+            )
+
         # Validar proyecto
         project = project_service.get_project_by_id(project_id)
         if not project:
@@ -52,10 +59,10 @@ async def upload_file(
                 status_code=403,
                 detail="No tienes acceso a este proyecto"
             )
-        
-        # Subir archivo (ya incluye lógica de versionado)
-        execution_id, metadata = upload_service.upload_file(
-            file=file,
+
+        # Procesar múltiples archivos
+        execution_id, metadatas = upload_service.upload_multiple_files(
+            files=files,
             project_id=project_id,
             period=period,
             user_id=user.id,
@@ -63,18 +70,21 @@ async def upload_file(
             test_type=test_type
         )
         
-        # Crear registro en historial con la información del proyecto
+        # Crear registro en historial
         upload_service.create_execution_record(
             execution_id=execution_id,
-            metadata=metadata,
+            metadatas=metadatas,
             project_name=project.name
         )
+        
+        # Retornar información del primer archivo (o un resumen)
+        primary_metadata = metadatas[0] if metadatas else None
         
         return UploadResponse(
             executionId=execution_id,
             success=True,
-            message=f"Archivo subido correctamente (Versión {metadata.version})",
-            metadata=metadata
+            message=f"{len(files)} archivo(s) subido(s) correctamente",
+            metadata=primary_metadata
         )
         
     except HTTPException:
@@ -89,9 +99,9 @@ async def upload_file(
 async def validate_files(execution_id: str):
     """Validar archivos subidos"""
     try:
-        # Obtener metadata
-        metadata = upload_service.get_metadata_by_execution_id(execution_id)
-        if not metadata:
+        # Obtener metadatas de todos los archivos
+        metadatas = upload_service.get_metadatas_by_execution_id(execution_id)
+        if not metadatas:
             raise HTTPException(
                 status_code=404,
                 detail="Ejecución no encontrada"
@@ -103,21 +113,23 @@ async def validate_files(execution_id: str):
             ExecutionStatus.PROCESSING
         )
         
-        # Realizar validación
-        validation_result = validation_service.validate_file(metadata)
-        validations = [validation_result]
+        # Realizar validación de todos los archivos
+        validation_results = validation_service.validate_files(metadatas)
         
         # Determinar si se puede proceder
-        can_proceed = validation_service.can_proceed_to_conversion(validations)
+        can_proceed = validation_service.can_proceed_to_conversion(validation_results)
         
         # Actualizar estado según resultado
-        if validation_result.status.value == "error":
+        has_errors = any(v.status.value == "error" for v in validation_results)
+        has_warnings = any(v.status.value == "warning" for v in validation_results)
+        
+        if has_errors:
             upload_service.update_execution_status(
                 execution_id, 
                 ExecutionStatus.ERROR,
                 "Errores encontrados en la validación"
             )
-        elif validation_result.status.value == "warning":
+        elif has_warnings:
             upload_service.update_execution_status(
                 execution_id, 
                 ExecutionStatus.WARNING
@@ -132,7 +144,7 @@ async def validate_files(execution_id: str):
             executionId=execution_id,
             success=True,
             message="Validación completada",
-            validations=validations,
+            validations=validation_results,
             canProceed=can_proceed
         )
         
@@ -151,11 +163,11 @@ async def validate_files(execution_id: str):
 
 @router.post("/convert/{execution_id}", response_model=ConversionResponse)
 async def convert_files(execution_id: str):
-    """Convertir archivos a formato estándar"""
+    """Convertir archivos a formato estándar con merge de BKPF/BSEG"""
     try:
-        # Obtener metadata
-        metadata = upload_service.get_metadata_by_execution_id(execution_id)
-        if not metadata:
+        # Obtener metadatas
+        metadatas = upload_service.get_metadatas_by_execution_id(execution_id)
+        if not metadatas:
             raise HTTPException(
                 status_code=404,
                 detail="Ejecución no encontrada"
@@ -167,14 +179,20 @@ async def convert_files(execution_id: str):
             ExecutionStatus.PROCESSING
         )
         
-        # Realizar conversión
-        conversion_result = conversion_service.convert_file(metadata)
+        # Realizar conversión con merge de archivos SAP
+        conversion_results = conversion_service.convert_files_with_merge(metadatas)
         
-        if conversion_result["success"]:
+        success_count = sum(1 for result in conversion_results if result["success"])
+        
+        if success_count > 0:
             # URLs de descarga
-            download_urls = [
-                conversion_service.get_download_url(conversion_result["filename"])
-            ]
+            download_urls = []
+            converted_files = []
+            
+            for result in conversion_results:
+                if result["success"]:
+                    converted_files.append(result["filename"])
+                    download_urls.append(conversion_service.get_download_url(result["filename"]))
             
             upload_service.update_execution_status(
                 execution_id, 
@@ -184,15 +202,15 @@ async def convert_files(execution_id: str):
             return ConversionResponse(
                 executionId=execution_id,
                 success=True,
-                message="Conversión completada exitosamente",
-                convertedFiles=[conversion_result["filename"]],
+                message=f"Conversión completada exitosamente - {success_count} archivo(s) procesado(s)",
+                convertedFiles=converted_files,
                 downloadUrls=download_urls
             )
         else:
             upload_service.update_execution_status(
                 execution_id, 
                 ExecutionStatus.ERROR,
-                "Error durante la conversión"
+                "Error durante la conversión de todos los archivos"
             )
             raise HTTPException(
                 status_code=500,
@@ -327,17 +345,21 @@ async def get_execution_details(execution_id: str):
 async def get_execution_status(execution_id: str):
     """Obtener estado de una ejecución"""
     try:
-        metadata = upload_service.get_metadata_by_execution_id(execution_id)
-        if not metadata:
+        metadatas = upload_service.get_metadatas_by_execution_id(execution_id)
+        if not metadatas:
             raise HTTPException(
                 status_code=404,
                 detail="Ejecución no encontrada"
             )
         
+        # Usar el primer metadata para el estado general
+        primary_metadata = metadatas[0]
+        
         return {
             "executionId": execution_id,
-            "status": metadata.status,
-            "version": metadata.version,
+            "status": primary_metadata.status,
+            "version": primary_metadata.version,
+            "fileCount": len(metadatas),
             "success": True
         }
         

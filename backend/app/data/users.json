@@ -12,7 +12,7 @@
       "canAccessAnalisisJET": true,
       "canAccessAnalisisRiesgos": true,
       "canAccessAnalisisObsolescencia": true,
-      "canAccessThoughtSpot": true,
+      "canAccessThoughtSpot": false,
       "canManageProjects": true,
       "canViewAllProjects": false
     },

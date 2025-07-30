@@ -2,13 +2,29 @@
 import api from './api';
 
 class ImportService {
-  async uploadFile(file, projectId, period, testType = 'libro_diario_import') {
+  async uploadFiles(files, projectId, period, testType = 'libro_diario_import') {
     try {
+      console.log('🔄 ImportService.uploadFiles called with:', {
+        fileCount: files.length,
+        fileNames: files.map(f => f.name),
+        projectId,
+        period,
+        testType
+      });
+
       const formData = new FormData();
-      formData.append('file', file);
+      
+      // Agregar múltiples archivos
+      files.forEach((file, index) => {
+        console.log(`📁 Adding file ${index}:`, file.name, file.size, 'bytes');
+        formData.append('files', file);
+      });
+      
       formData.append('project_id', projectId);
       formData.append('period', period);
       formData.append('test_type', testType);
+
+      console.log('📤 Sending FormData to /api/import/upload');
 
       const response = await api.post('/api/import/upload', formData, {
         headers: {
@@ -16,11 +32,18 @@ class ImportService {
         },
       });
       
+      console.log('✅ Upload response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error('❌ Error uploading files:', error);
+      console.error('Error response:', error.response?.data);
       throw error;
     }
+  }
+
+  async uploadFile(file, projectId, period, testType = 'libro_diario_import') {
+    // Mantener compatibilidad con versión anterior
+    return this.uploadFiles([file], projectId, period, testType);
   }
 
   async validateFiles(executionId) {
@@ -184,9 +207,10 @@ class ImportService {
           filename: filename,
           conversion_date: new Date().toISOString(),
           format: "standard_accounting_json",
-          total_records: Math.floor(Math.random() * 1000) + 100
+          total_records: Math.floor(Math.random() * 1000) + 100,
+          source_files: filename.includes('merged') ? ['BKPF.txt', 'BSEG.txt'] : [filename]
         },
-        headers: filename.includes('libro_diario') ? 
+        headers: filename.includes('libro_diario') || filename.includes('merged') ? 
           ["fecha", "asiento", "cuenta", "subcuenta", "descripcion", "debe", "haber", "documento", "referencia"] :
           ["cuenta", "descripcion", "saldo_inicial_debe", "saldo_inicial_haber", "movimientos_debe", "movimientos_haber", "saldo_final_debe", "saldo_final_haber"],
         data: this.generateMockData(filename),
@@ -194,7 +218,8 @@ class ImportService {
           processed_successfully: true,
           validation_passed: true,
           conversion_completed: true,
-          ready_for_analysis: true
+          ready_for_analysis: true,
+          sap_merge_performed: filename.includes('merged')
         }
       };
 
@@ -206,7 +231,7 @@ class ImportService {
   }
 
   generateMockData(filename) {
-    const isLibroDiario = filename.includes('libro_diario');
+    const isLibroDiario = filename.includes('libro_diario') || filename.includes('merged');
     const mockData = [];
     const recordCount = Math.floor(Math.random() * 20) + 10; // Entre 10 y 30 registros
 
@@ -217,11 +242,11 @@ class ImportService {
           String(i + 1),
           String(Math.floor(Math.random() * 900000) + 100000),
           String(Math.floor(Math.random() * 9000000000) + 1000000000),
-          `Operación contable ${i + 1}`,
+          filename.includes('merged') ? `SAP Merged Record ${i + 1}` : `Operación contable ${i + 1}`,
           Math.random() > 0.5 ? `${(Math.random() * 10000).toFixed(2)}` : "0.00",
           Math.random() > 0.5 ? `${(Math.random() * 10000).toFixed(2)}` : "0.00",
           `DOC${String(i + 1).padStart(4, '0')}`,
-          `REF${String(i + 1).padStart(4, '0')}`
+          filename.includes('merged') ? `OIVE-2023-${String(i + 1).padStart(3, '0')}` : `REF${String(i + 1).padStart(4, '0')}`
         ]);
       } else {
         const debeInicial = Math.random() * 50000;

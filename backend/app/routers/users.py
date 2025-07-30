@@ -1,7 +1,7 @@
 # Rutas de usuarios
 # backend/app/routers/users.py
 from fastapi import APIRouter, HTTPException
-from app.models.user import UserResponse
+from app.models.user import UserResponse, UsersListResponse
 from app.services.user_service import UserService
 
 router = APIRouter()
@@ -23,6 +23,24 @@ async def get_current_user():
             user=user,
             success=True,
             message="Usuario obtenido correctamente"
+        )
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error interno del servidor: {str(e)}"
+        )
+
+@router.get("/all", response_model=UsersListResponse)
+async def get_all_users():
+    """Obtener todos los usuarios disponibles"""
+    try:
+        users = user_service.get_all_users()
+        
+        return UsersListResponse(
+            users=users,
+            success=True,
+            message="Usuarios obtenidos correctamente"
         )
     
     except Exception as e:

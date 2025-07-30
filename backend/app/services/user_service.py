@@ -2,7 +2,7 @@
 # backend/app/services/user_service.py
 import json
 import os
-from typing import Optional
+from typing import Optional, List
 from app.models.user import User, UserPermissions
 
 class UserService:
@@ -15,9 +15,42 @@ class UserService:
             with open(self.data_file, 'r', encoding='utf-8') as file:
                 return json.load(file)
         except FileNotFoundError:
+            print(f"⚠️ Archivo de usuarios no encontrado: {self.data_file}")
             return {}
         except json.JSONDecodeError:
+            print(f"❌ Error al parsear JSON de usuarios: {self.data_file}")
             return {}
+    
+    def get_all_users(self) -> List[User]:
+        """Obtener todos los usuarios disponibles"""
+        users_data = self._load_users_data()
+        users = []
+        
+        for user_id, user_data in users_data.items():
+            try:
+                # Convertir permisos a objeto UserPermissions
+                permissions = UserPermissions(**user_data.get('permissions', {}))
+                
+                user = User(
+                    id=user_data['id'],
+                    name=user_data['name'],
+                    email=user_data['email'],
+                    role=user_data['role'],
+                    roleName=user_data['roleName'],
+                    department=user_data['department'],
+                    projects=user_data['projects'],
+                    permissions=permissions,
+                    status=user_data['status'],
+                    createdAt=user_data['createdAt'],
+                    lastLogin=user_data['lastLogin']
+                )
+                users.append(user)
+            except Exception as e:
+                print(f"⚠️ Error procesando usuario {user_id}: {str(e)}")
+                continue
+        
+        print(f"✅ Cargados {len(users)} usuarios desde {self.data_file}")
+        return users
     
     def get_user_by_id(self, user_id: str) -> Optional[User]:
         """Obtener usuario por ID"""
@@ -26,22 +59,26 @@ class UserService:
         if user_id in users_data:
             user_data = users_data[user_id]
             
-            # Convertir permisos a objeto UserPermissions
-            permissions = UserPermissions(**user_data.get('permissions', {}))
-            
-            return User(
-                id=user_data['id'],
-                name=user_data['name'],
-                email=user_data['email'],
-                role=user_data['role'],
-                roleName=user_data['roleName'],
-                department=user_data['department'],
-                projects=user_data['projects'],
-                permissions=permissions,
-                status=user_data['status'],
-                createdAt=user_data['createdAt'],
-                lastLogin=user_data['lastLogin']
-            )
+            try:
+                # Convertir permisos a objeto UserPermissions
+                permissions = UserPermissions(**user_data.get('permissions', {}))
+                
+                return User(
+                    id=user_data['id'],
+                    name=user_data['name'],
+                    email=user_data['email'],
+                    role=user_data['role'],
+                    roleName=user_data['roleName'],
+                    department=user_data['department'],
+                    projects=user_data['projects'],
+                    permissions=permissions,
+                    status=user_data['status'],
+                    createdAt=user_data['createdAt'],
+                    lastLogin=user_data['lastLogin']
+                )
+            except Exception as e:
+                print(f"❌ Error procesando usuario {user_id}: {str(e)}")
+                return None
         
         return None
     

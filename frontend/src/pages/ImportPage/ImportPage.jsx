@@ -34,18 +34,7 @@ const ImportPage = () => {
       const userResponse = await userService.getCurrentUser();
       if (userResponse.success && userResponse.user) {
         setUser(userResponse.user);
-        
-        // Cargar proyectos del usuario
-        const projectsResponse = await projectService.getProjectsForCurrentUser();
-        if (projectsResponse.success) {
-          setProjects(projectsResponse.projects);
-        }
-        
-        // Cargar historial de importaciones
-        const historyResponse = await importService.getImportHistory();
-        if (historyResponse.success) {
-          setImportHistory(historyResponse.executions);
-        }
+        await loadDataForUser(userResponse.user);
       }
     } catch (err) {
       console.error('Error loading initial data:', err);
@@ -55,26 +44,131 @@ const ImportPage = () => {
     }
   };
 
+  const loadDataForUser = async (currentUser) => {
+    try {
+      // Cargar proyectos del usuario
+      const projectsResponse = await projectService.getProjectsForCurrentUser();
+      if (projectsResponse.success) {
+        // Filtrar proyectos basado en los asignados al usuario actual
+        const filteredProjects = projectsResponse.projects.filter(project => 
+          currentUser.projects.includes(project.id)
+        );
+        setProjects(filteredProjects);
+      }
+      
+      // Cargar historial de importaciones
+      const historyResponse = await importService.getImportHistory();
+      if (historyResponse.success) {
+        setImportHistory(historyResponse.executions);
+      }
+    } catch (err) {
+      console.error('Error loading data for user:', err);
+      setProjects([]);
+      setImportHistory([]);
+    }
+  };
+
+  // Función para manejar cambio de usuario
+  const handleUserChange = async (newUser) => {
+    try {
+      setLoading(true);
+      setUser(newUser);
+      
+      // Verificar permisos del nuevo usuario
+      if (!newUser.permissions?.canAccessLibroDiario) {
+        setError('El usuario seleccionado no tiene permisos para acceder a la importación de libro diario');
+        setProjects([]);
+        setImportHistory([]);
+        return;
+      } else {
+        setError(null); // Limpiar error si el usuario tiene permisos
+      }
+      
+      // Recargar datos para el nuevo usuario
+      await loadDataForUser(newUser);
+      
+      // Mostrar notificación del cambio
+      showUserChangeNotification(newUser.name);
+      
+    } catch (err) {
+      console.error('Error changing user:', err);
+      setError('Error al cambiar de usuario');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showUserChangeNotification = (userName) => {
+    // Crear notificación temporal
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transform transition-all duration-300';
+    notification.innerHTML = `
+      <div class="flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+        <span>Cambiado a ${userName}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  };
+
   const handleFileUpload = async (formData) => {
     try {
       setUploading(true);
       
-      const response = await importService.uploadFile(
-        formData.file,
-        formData.projectId,
-        formData.period,
-        'libro_diario_import'
-      );
+      console.log('📤 Form data received:', formData);
+      
+      let response;
+      
+      if (formData.libroDiarioFiles && formData.libroDiarioFiles.length > 0) {
+        // Preparar lista de archivos
+        const allFiles = [...formData.libroDiarioFiles];
+        if (formData.sumasSaldosFile) {
+          allFiles.push(formData.sumasSaldosFile);
+        }
+        
+        console.log('📁 Files to upload:', allFiles.map(f => ({ name: f.name, size: f.size })));
+        
+        // Subir múltiples archivos
+        response = await importService.uploadFiles(
+          allFiles,
+          formData.projectId,
+          formData.period,
+          'libro_diario_import'
+        );
+      } else {
+        setError('Debe seleccionar al menos un archivo de libro diario');
+        return;
+      }
       
       if (response.success) {
+        console.log('✅ Upload successful:', response);
         // Navegar a la página de validación
         navigate(`/libro-diario/validation/${response.executionId}`);
       } else {
-        setError('Error al subir el archivo');
+        setError('Error al subir los archivos');
       }
     } catch (err) {
-      console.error('Error uploading file:', err);
-      setError('Error al subir el archivo: ' + (err.response?.data?.detail || err.message));
+      console.error('❌ Error uploading files:', err);
+      console.error('Error details:', {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        message: err.message
+      });
+      setError('Error al subir los archivos: ' + (err.response?.data?.detail || err.message));
     } finally {
       setUploading(false);
     }
@@ -120,7 +214,7 @@ const ImportPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header user={user} />
+        <Header user={user} onUserChange={handleUserChange} />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-purple-600 mb-4"></div>
@@ -133,7 +227,7 @@ const ImportPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header user={user} />
+      <Header user={user} onUserChange={handleUserChange} />
       
       <main className="flex-1 [&_*]:text-xs [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm">
         {/* CAMBIO PRINCIPAL: Contenedor más ancho y letra más pequeña */}
@@ -167,6 +261,11 @@ const ImportPage = () => {
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Importación Libro Diario</h1>
             <p className="text-gray-600">Carga y valida tus archivos contables de forma automática</p>
+            {user && (
+              <p className="text-sm text-gray-500 mt-2">
+                Usuario actual: {user.name} ({user.roleName})
+              </p>
+            )}
           </div>
 
           {/* Indicador de pasos */}

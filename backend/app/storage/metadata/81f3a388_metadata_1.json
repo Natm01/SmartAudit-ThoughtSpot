@@ -1,0 +1,15 @@
+{
+  "executionId": "81f3a388",
+  "projectId": "00041792",
+  "testType": "libro_diario_import",
+  "period": "undefined",
+  "version": 1,
+  "originalFileName": "BSEG.txt",
+  "fileType": "txt",
+  "fileSize": 6748,
+  "uploadDate": "2025-07-30T18:34:08.510544",
+  "userId": "maria.garcia",
+  "userName": "María García",
+  "status": "pending",
+  "filePath": "C:\\Users\\mngonzalez\\Downloads\\smartaudit-project\\smartaudit\\backend\\app\\services\\..\\storage\\files\\81f3a388_BSEG_1.txt"
+}

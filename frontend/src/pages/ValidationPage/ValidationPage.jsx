@@ -2,42 +2,60 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/Header/Header';
-import ValidationTable from '../../components/ValidationTable/ValidationTable';
-import FilePreviewModal from '../../components/FilePreviewModal/FilePreviewModal';
+import ValidationPhases from '../../components/ValidationPhases/ValidationPhases';
+import FilePreview from '../../components/FilePreview/FilePreview';
 import userService from '../../services/userService';
-import importService from '../../services/importService';
 
 const ValidationPage = () => {
   const { executionId } = useParams();
   const navigate = useNavigate();
   
   const [user, setUser] = useState(null);
-  const [validationData, setValidationData] = useState(null);
+  const [executionData, setExecutionData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const [previewModal, setPreviewModal] = useState({
-    isOpen: false,
-    filename: '',
-    data: null
+  const [validationPhases, setValidationPhases] = useState({
+    libroDiario: { completed: false, results: null },
+    sumasSaldos: { completed: false, results: null }
   });
+  const [canProceed, setCanProceed] = useState(false);
 
   useEffect(() => {
     loadInitialData();
   }, [executionId]);
 
   const loadInitialData = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
+      console.log('🔄 Loading initial data for execution:', executionId);
       
-      // Cargar usuario
+      // Obtener información del usuario actual desde el servicio
       const userResponse = await userService.getCurrentUser();
+      console.log('👤 Current user from service:', userResponse);
+      
       if (userResponse.success && userResponse.user) {
         setUser(userResponse.user);
+        
+        // Simular datos de ejecución con el usuario correcto
+        const mockExecutionData = {
+          executionId: executionId,
+          projectId: "hoteles-turisticos-unidos-sa",
+          projectName: "HOTELES TURÍSTICOS UNIDOS, S.A.",
+          period: "2023-01-01 a 2023-12-31",
+          userId: userResponse.user.id,
+          userName: userResponse.user.name,
+          
+          // Archivos como strings para el preview
+          libroDiarioFile: "BSEG.txt + BKPF.txt",
+          sumasSaldosFile: "SumasSaldos_CYGNUS.xlsx"
+        };
+        
+        setExecutionData(mockExecutionData);
+      } else {
+        setError('No se pudo cargar la información del usuario');
       }
-      
-      // Iniciar validación automáticamente
-      await startValidation();
       
     } catch (err) {
       console.error('Error loading initial data:', err);
@@ -47,69 +65,95 @@ const ValidationPage = () => {
     }
   };
 
-  const startValidation = async () => {
+  const handleUserChange = async (newUser) => {
     try {
-      setProcessing(true);
+      console.log('🔄 User changed in ValidationPage to:', newUser);
+      setUser(newUser);
       
-      const response = await importService.validateFiles(executionId);
-      if (response.success) {
-        setValidationData(response);
-      } else {
-        setError('Error durante la validación');
+      // Actualizar datos de ejecución con el nuevo usuario
+      if (executionData) {
+        setExecutionData({
+          ...executionData,
+          userId: newUser.id,
+          userName: newUser.name
+        });
       }
-    } catch (err) {
-      console.error('Error during validation:', err);
-      setError('Error durante la validación: ' + (err.response?.data?.detail || err.message));
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handlePreviewFile = async (filename) => {
-    try {
-      const previewData = await importService.previewFile(executionId, filename);
-      setPreviewModal({
-        isOpen: true,
-        filename: filename,
-        data: previewData
-      });
-    } catch (err) {
-      console.error('Error previewing file:', err);
-      alert('Error al previsualizar el archivo: ' + (err.response?.data?.detail || err.message));
-    }
-  };
-
-  const handleProceedToConversion = async () => {
-    try {
-      setProcessing(true);
       
-      const response = await importService.convertFiles(executionId);
-      if (response.success) {
-        // Navegar a resultados
-        navigate(`/libro-diario/results/${executionId}`);
-      } else {
-        setError('Error durante la conversión');
-      }
+      // Mostrar notificación del cambio
+      showUserChangeNotification(newUser.name);
     } catch (err) {
-      console.error('Error during conversion:', err);
-      setError('Error durante la conversión: ' + (err.response?.data?.detail || err.message));
-    } finally {
-      setProcessing(false);
+      console.error('Error changing user:', err);
     }
   };
 
-  const canProceed = validationData?.canProceed && !processing;
-  const hasErrors = validationData?.validations?.some(v => v.status === 'error');
-  const hasWarnings = validationData?.validations?.some(v => v.status === 'warning');
+  const showUserChangeNotification = (userName) => {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transform transition-all duration-300';
+    notification.innerHTML = `
+      <div class="flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+        <span>Cambiado a ${userName}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  };
+
+  const handleLibroDiarioValidationComplete = () => {
+    setValidationPhases(prev => ({
+      ...prev,
+      libroDiario: { completed: true, results: 'success' }
+    }));
+    checkCanProceed();
+  };
+
+  const handleSumasSaldosValidationComplete = () => {
+    setValidationPhases(prev => ({
+      ...prev,
+      sumasSaldos: { completed: true, results: 'success' }
+    }));
+    checkCanProceed();
+  };
+
+  const checkCanProceed = () => {
+    // Permitir proceder cuando al menos una validación esté completa
+    const libroDiarioCompleted = validationPhases.libroDiario.completed;
+    const sumasSaldosCompleted = validationPhases.sumasSaldos.completed;
+    
+    if (libroDiarioCompleted || sumasSaldosCompleted) {
+      setCanProceed(true);
+    }
+  };
+
+  const handleProceedToResults = () => {
+    if (canProceed) {
+      navigate(`/libro-diario/results/${executionId}`);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header user={user} />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-purple-600 mb-4"></div>
-            <p className="text-gray-600">Iniciando validación...</p>
+      <div className="min-h-screen bg-gray-50">
+        <Header 
+          user={user} 
+          onUserChange={handleUserChange}
+          showUserSelector={true}
+        />
+        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-purple-600"></div>
+            <span className="ml-4 text-lg text-gray-600">Cargando validación...</span>
           </div>
         </main>
       </div>
@@ -117,58 +161,67 @@ const ValidationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header user={user} />
+    <div className="min-h-screen bg-gray-50">
+      <Header 
+        user={user} 
+        onUserChange={handleUserChange}
+        showUserSelector={true}
+      />
       
-      <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Breadcrumb */}
-          <nav className="flex mb-8" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
-              <li className="inline-flex items-center">
-                <button
-                  onClick={() => navigate('/')}
-                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-purple-600"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                  </svg>
-                  Inicio
-                </button>
-              </li>
+      <main className="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
+          {/* Breadcrumb Navigation */}
+          <nav className="flex" aria-label="Breadcrumb">
+            <ol className="flex items-center space-x-4">
               <li>
-                <div className="flex items-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
-                  </svg>
-                  <button
-                    onClick={() => navigate('/libro-diario')}
-                    className="ml-1 text-sm font-medium text-gray-500 hover:text-purple-600 md:ml-2"
-                  >
-                    Importación Libro Diario
-                  </button>
+                <div>
+                  <a href="/" className="text-gray-400 hover:text-gray-500">
+                    <svg className="flex-shrink-0 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                    </svg>
+                    <span className="sr-only">Inicio</span>
+                  </a>
                 </div>
               </li>
               <li>
                 <div className="flex items-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="flex-shrink-0 h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
                   </svg>
-                  <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">Validación</span>
+                  <a href="/libro-diario" className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">
+                    Importación Libro Diario
+                  </a>
+                </div>
+              </li>
+              <li>
+                <div className="flex items-center">
+                  <svg className="flex-shrink-0 h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                  </svg>
+                  <span className="ml-4 text-sm font-medium text-gray-500">
+                    Validación
+                  </span>
                 </div>
               </li>
             </ol>
           </nav>
 
-          {/* Título */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Validación de Archivos</h1>
-            <p className="text-gray-600">Resultados de la validación de integridad y formato</p>
+          {/* Header con información del usuario */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Validación de Archivos Contables</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Proyecto: {executionData?.projectName} • Período: {executionData?.period}
+            </p>
+            {user && (
+              <p className="text-sm text-gray-500 mt-1">
+                Usuario: {user.name} ({user.roleName})
+              </p>
+            )}
           </div>
 
-          {/* Indicador de pasos */}
-          <div className="mb-8">
-            <div className="flex items-center">
+          {/* Progress Steps */}
+          <div className="p-6">
+            <div className="flex items-center justify-center">
               <div className="flex items-center text-green-600">
                 <div className="flex items-center justify-center w-8 h-8 border-2 border-green-600 rounded-full bg-green-600 text-white text-sm font-medium">
                   ✓
@@ -192,148 +245,101 @@ const ValidationPage = () => {
             </div>
           </div>
 
-          {/* Estado de procesamiento */}
-          {processing && (
-            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <div>
-                  <p className="text-sm font-medium text-blue-800">Procesando archivos...</p>
-                  <p className="text-sm text-blue-600">Esta operación puede tardar unos momentos</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Error Message */}
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex">
-                <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path>
-                </svg>
-                <div className="ml-3">
-                  <p className="text-sm text-red-800">{error}</p>
-                </div>
-                <button
-                  onClick={() => setError(null)}
-                  className="ml-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg p-1.5 hover:bg-red-100 inline-flex h-8 w-8"
-                >
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
-                  </svg>
-                </button>
-              </div>
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+              <span className="block sm:inline">{error}</span>
             </div>
           )}
 
-          {/* Tabla de validación */}
-          {validationData && (
-            <div className="mb-8">
-              <ValidationTable
-                validations={validationData.validations}
-                onPreviewFile={handlePreviewFile}
+          {/* Validation Content */}
+          {executionData && (
+            <div className="space-y-6">
+              {/* Validación de Libro Diario - Desplegable completo */}
+              <ValidationPhases
+                fileType="libro_diario"
+                onComplete={handleLibroDiarioValidationComplete}
               />
-            </div>
-          )}
 
-          {/* Archivos validados exitosamente */}
-          {validationData && validationData.validations.some(v => v.status !== 'error') && (
-            <div className="mb-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Archivos Validados Exitosamente</h3>
-                <div className="space-y-2">
-                  {validationData.validations
-                    .filter(v => v.status !== 'error')
-                    .map((validation, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{validation.fileName}</p>
-                            <p className="text-xs text-gray-500">
-                              {validation.origin === 'libro_diario' ? 'Libro Diario' : 'Sumas y Saldos'} • 
-                              {validation.validationsPerformed} validaciones realizadas
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handlePreviewFile(validation.fileName)}
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200"
-                        >
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          Previsualizar
-                        </button>
+              {/* Tabla del Libro Diario - Ancho completo */}
+              <FilePreview
+                file={executionData.libroDiarioFile}
+                fileType="libro_diario"
+                executionId={executionId}
+                maxRows={25}
+              />
+
+              {/* Validación de Sumas y Saldos */}
+              <ValidationPhases
+                fileType="sumas_saldos"
+                onComplete={handleSumasSaldosValidationComplete}
+              />
+
+              {/* Tabla de Sumas y Saldos */}
+              <FilePreview
+                file={executionData.sumasSaldosFile}
+                fileType="sumas_saldos"
+                executionId={executionId}
+                maxRows={10}
+              />
+
+              {/* Botón para continuar - Solo aparece cuando ambas validaciones están completas */}
+              {(validationPhases.libroDiario.completed && validationPhases.sumasSaldos.completed) && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg flex-1 mr-6">
+                      <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                      </svg>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-green-800">Todas las validaciones completadas exitosamente</p>
+                        <p className="text-sm text-green-700 mt-1">
+                          Los datos están listos para ser convertidos al formato estándar.
+                        </p>
                       </div>
-                    ))}
+                    </div>
+                    
+                    <button 
+                      onClick={handleProceedToResults}
+                      className="px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                    >
+                      <span>Continuar a Resultados</span>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
-          {/* Botones de acción */}
-          <div className="flex justify-between">
-            <button
+          {/* Botones de navegación inferiores */}
+          <div className="flex justify-between items-center mt-8 pt-8 border-t border-gray-200">
+            <button 
               onClick={() => navigate('/libro-diario')}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Volver
+              Volver a Importación
             </button>
-
-            <button
-              onClick={handleProceedToConversion}
-              disabled={!canProceed}
-              className={`
-                inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white
-                ${canProceed 
-                  ? 'bg-purple-600 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2' 
-                  : 'bg-gray-400 cursor-not-allowed'
-                }
-                transition-colors duration-200
-              `}
-            >
-              {processing ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  Continuar a Resultados
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </>
-              )}
-            </button>
+            
+            {canProceed && (
+              <button 
+                onClick={handleProceedToResults}
+                className="flex items-center px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Continuar a Resultados
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </main>
-
-      {/* Modal de previsualización */}
-      <FilePreviewModal
-        isOpen={previewModal.isOpen}
-        filename={previewModal.filename}
-        data={previewModal.data}
-        onClose={() => setPreviewModal({ isOpen: false, filename: '', data: null })}
-      />
     </div>
   );
 };

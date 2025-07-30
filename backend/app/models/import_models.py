@@ -31,7 +31,7 @@ class ValidationResult(BaseModel):
 class FileValidation(BaseModel):
     fileName: str
     fileType: str
-    origin: str  # "libro_diario" o "sumas_saldos"
+    origin: str  # "libro_diario" o "sumas_saldos" o "bkpf" o "bseg"
     status: ValidationStatus
     validationsPerformed: int
     totalValidations: int
@@ -64,12 +64,14 @@ class ImportExecution(BaseModel):
     userName: str
     executionDate: str
     status: ExecutionStatus
-    version: Optional[int] = 1  # Agregar versión
-    libroDiarioFile: Optional[str] = None
+    version: Optional[int] = 1
+    libroDiarioFile: Optional[str] = None  # Puede contener múltiples archivos separados por coma
     sumasSaldosFile: Optional[str] = None
     validationResults: List[FileValidation] = []
     convertedFiles: List[str] = []
     errorMessage: Optional[str] = None
+    fileCount: Optional[int] = 1  # Nuevo campo para contar archivos
+    hasSAPMerge: Optional[bool] = False  # Indica si se realizó merge de SAP
 
 class UploadRequest(BaseModel):
     projectId: str

@@ -1,4 +1,4 @@
-// frontend/src/pages/HomePage/HomePage.jsx - Actualizada para manejar navegación
+// frontend/src/pages/HomePage/HomePage.jsx - Actualizada para manejar cambio de usuarios
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header/Header';
@@ -21,31 +21,89 @@ const HomePage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        setLoading(true);
-        
-        // Cargar información del usuario actual
-        const userResponse = await userService.getCurrentUser();
-        if (userResponse.success && userResponse.user) {
-          setUser(userResponse.user);
-          
-          // Cargar aplicaciones para el usuario actual
-          const appsResponse = await applicationService.getApplicationsForCurrentUser();
-          if (appsResponse.success && appsResponse.applications) {
-            setApplications(appsResponse.applications);
-          }
-        }
-      } catch (err) {
-        console.error('Error loading user data:', err);
-        setError('Error al cargar la información del usuario');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadUserData();
   }, []);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      
+      // Cargar información del usuario actual
+      const userResponse = await userService.getCurrentUser();
+      if (userResponse.success && userResponse.user) {
+        setUser(userResponse.user);
+        await loadApplicationsForUser(userResponse.user);
+      }
+    } catch (err) {
+      console.error('Error loading user data:', err);
+      setError('Error al cargar la información del usuario');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadApplicationsForUser = async (currentUser) => {
+    try {
+      // Cargar aplicaciones para el usuario actual
+      const appsResponse = await applicationService.getApplicationsForCurrentUser();
+      if (appsResponse.success && appsResponse.applications) {
+        // Filtrar aplicaciones basado en los permisos del usuario actual
+        const filteredApps = appsResponse.applications.filter(app => {
+          if (!app.permissionRequired) return true;
+          return currentUser.permissions[app.permissionRequired] || false;
+        });
+        setApplications(filteredApps);
+      }
+    } catch (err) {
+      console.error('Error loading applications:', err);
+      setApplications([]); // En caso de error, mostrar array vacío
+    }
+  };
+
+  const handleUserChange = async (newUser) => {
+    try {
+      setLoading(true);
+      setUser(newUser);
+      
+      // Recargar aplicaciones para el nuevo usuario
+      await loadApplicationsForUser(newUser);
+      
+      // Mostrar notificación del cambio
+      showUserChangeNotification(newUser.name);
+      
+    } catch (err) {
+      console.error('Error changing user:', err);
+      setError('Error al cambiar de usuario');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showUserChangeNotification = (userName) => {
+    // Crear notificación temporal
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transform transition-all duration-300';
+    notification.innerHTML = `
+      <div class="flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+        <span>Cambiado a ${userName}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  };
 
   const handleApplicationClick = (application) => {
     console.log('Clicked application:', application);
@@ -79,7 +137,7 @@ const HomePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header />
+        <Header user={user} onUserChange={handleUserChange} />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-purple-600 mb-4"></div>
@@ -93,7 +151,7 @@ const HomePage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header />
+        <Header user={user} onUserChange={handleUserChange} />
         <main className="flex-1 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-white rounded-xl shadow-sm p-8 text-center border border-red-100">
             <div className="text-6xl mb-4">⚠️</div>
@@ -113,7 +171,10 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header user={user} />
+      <Header 
+        user={user} 
+        onUserChange={handleUserChange}
+      />
       
       <main className="flex-1">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -158,8 +219,12 @@ const HomePage = () => {
                     No hay aplicaciones disponibles
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    No tienes permisos para acceder a ninguna aplicación en este momento.
-                    Contacta con tu administrador si crees que esto es un error.
+                    {user?.name} no tiene permisos para acceder a ninguna aplicación en este momento.
+                    {user?.roleName && (
+                      <span className="block mt-2 text-sm text-gray-500">
+                        Rol actual: {user.roleName}
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>

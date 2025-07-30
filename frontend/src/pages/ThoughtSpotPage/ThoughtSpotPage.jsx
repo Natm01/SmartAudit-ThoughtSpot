@@ -297,7 +297,7 @@ const ThoughtSpotPage = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-full">
             <div className="h-full">
               <LiveboardEmbed
-                liveboardId="56694e30-688e-460d-9614-19741b488296"
+                liveboardId="f1f1312f-af0d-40d2-b94f-85f75f154bb4"
                 frameParams={{
                   height: '100vh',
                   width: '100%', 
