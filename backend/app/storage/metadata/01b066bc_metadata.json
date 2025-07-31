@@ -1,0 +1,15 @@
+{
+  "executionId": "01b066bc",
+  "projectId": "00038150",
+  "testType": "libro_diario_import",
+  "period": "2023-01-01 a 2023-12-31",
+  "version": 1,
+  "originalFileName": "BKPF.txt",
+  "fileType": "txt",
+  "fileSize": 6604,
+  "uploadDate": "2025-07-31T17:43:33.961976",
+  "userId": "maria.garcia",
+  "userName": "María García",
+  "status": "pending",
+  "filePath": "C:\\Users\\mngonzalez\\Downloads\\smartaudit-project\\smartaudit\\backend\\app\\services\\..\\storage\\files\\01b066bc_BKPF.txt"
+}

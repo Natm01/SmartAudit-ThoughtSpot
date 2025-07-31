@@ -740,7 +740,26 @@
       "errorMessage": null,
       "fileCount": 1,
       "hasSAPMerge": false
+    },
+    {
+      "executionId": "01b066bc",
+      "projectId": "00038150",
+      "projectName": "OPERADOR INTEGRAL DE VEHICULOS, S.L.U. | 23-24",
+      "testType": "libro_diario_import",
+      "period": "2023-01-01 a 2023-12-31",
+      "userId": "maria.garcia",
+      "userName": "María García",
+      "executionDate": "2025-07-31T17:43:33.961976",
+      "status": "pending",
+      "version": 1,
+      "libroDiarioFile": "BKPF.txt, BSEG.txt, RFBILA00_OIVE_2023.txt",
+      "sumasSaldosFile": null,
+      "validationResults": [],
+      "convertedFiles": [],
+      "errorMessage": null,
+      "fileCount": 1,
+      "hasSAPMerge": false
     }
   ],
-  "lastUpdated": "2025-07-31T15:38:03.700598"
+  "lastUpdated": "2025-07-31T17:43:33.984606"
 }

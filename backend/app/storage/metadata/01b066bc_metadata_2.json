@@ -1,0 +1,15 @@
+{
+  "executionId": "01b066bc",
+  "projectId": "00038150",
+  "testType": "libro_diario_import",
+  "period": "2023-01-01 a 2023-12-31",
+  "version": 1,
+  "originalFileName": "RFBILA00_OIVE_2023.txt",
+  "fileType": "txt",
+  "fileSize": 110283,
+  "uploadDate": "2025-07-31T17:43:33.977998",
+  "userId": "maria.garcia",
+  "userName": "María García",
+  "status": "pending",
+  "filePath": "C:\\Users\\mngonzalez\\Downloads\\smartaudit-project\\smartaudit\\backend\\app\\services\\..\\storage\\files\\01b066bc_RFBILA00_OIVE_2023_2.txt"
+}

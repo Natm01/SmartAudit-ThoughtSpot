@@ -124,11 +124,11 @@ const Header = ({ user, onUserChange }) => {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex justify-between items-center h-16">
           {/* Logo y título */}
           <div className="flex items-center space-x-4">
-            <img src={logo} alt="SmartAudit" className="h-12 w-auto" />
+            <img src={logo} alt="SmartAudit" className="h-16 w-auto" />
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-gradient">SmartAudit</h1>
             </div>

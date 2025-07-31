@@ -2,23 +2,6 @@
 import React, { useState } from 'react';
 
 const ImportForm = ({ projects, onSubmit, loading }) => {
-
-  const handleDateChange = (field, value) => {
-    // Validar que la fecha esté en formato correcto y el año tenga 4 dígitos
-    if (value) {
-      const date = new Date(value);
-      const year = date.getFullYear();
-      
-      // Verificar que el año esté entre 1900 y 2100 (4 dígitos válidos)
-      if (year < 1900 || year > 2100) {
-        console.warn('Año fuera del rango válido');
-        return;
-      }
-    }
-    
-    handleInputChange(field, value);
-  };
-  
   const [formData, setFormData] = useState({
     projectId: '',
     fechaInicio: '',
@@ -338,6 +321,21 @@ const ImportForm = ({ projects, onSubmit, loading }) => {
     );
   };
 
+  // Función para manejar el cambio de fecha con validación
+  const handleDateChange = (field, value) => {
+    // Asegurarse de que el valor sea válido antes de actualizar el estado
+    if (value) {
+      // Validar que el año tenga máximo 4 dígitos
+      const dateParts = value.split('-');
+      if (dateParts[0] && dateParts[0].length > 4) {
+        // Si el año tiene más de 4 dígitos, truncarlo
+        dateParts[0] = dateParts[0].substring(0, 4);
+        value = dateParts.join('-');
+      }
+      handleInputChange(field, value);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
       <div className="mb-3">
@@ -366,67 +364,35 @@ const ImportForm = ({ projects, onSubmit, loading }) => {
           </div>
           
           <div className="lg:col-span-2">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Fecha Inicio <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Fecha Inicio <span className="text-red-500">*</span></label>
             <input
               type="date"
-              value={formData.fechaInicio}
+              value={formData.fechaInicio || ''}
               onChange={(e) => handleDateChange('fechaInicio', e.target.value)}
+              onBlur={(e) => handleDateChange('fechaInicio', e.target.value)}
               min="1900-01-01"
-              max="2100-12-31"
-              pattern="\d{4}-\d{2}-\d{2}"
+              max="9999-12-31"
               className={`w-full px-3 py-1.5 text-xs border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
                 errors.fechaInicio ? 'border-red-300' : 'border-gray-300'
               }`}
-              onKeyPress={(e) => {
-                // Prevenir entrada de caracteres no válidos
-                if (!/[0-9\-]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-              onBlur={(e) => {
-                // Validación adicional al perder el foco
-                const value = e.target.value;
-                if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                  setErrors(prev => ({
-                    ...prev,
-                    fechaInicio: 'Formato de fecha inválido. Use YYYY-MM-DD'
-                  }));
-                }
-              }}
+              placeholder="dd/mm/aaaa"
             />
             {errors.fechaInicio && <p className="text-xs text-red-600 mt-1">{errors.fechaInicio}</p>}
           </div>
 
           <div className="lg:col-span-2">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Fecha Fin <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Fecha Fin <span className="text-red-500">*</span></label>
             <input
               type="date"
-              value={formData.fechaFin}
+              value={formData.fechaFin || ''}
               onChange={(e) => handleDateChange('fechaFin', e.target.value)}
+              onBlur={(e) => handleDateChange('fechaFin', e.target.value)}
               min="1900-01-01"
-              max="2100-12-31"
-              pattern="\d{4}-\d{2}-\d{2}"
+              max="9999-12-31"
               className={`w-full px-3 py-1.5 text-xs border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
                 errors.fechaFin ? 'border-red-300' : 'border-gray-300'
               }`}
-              onKeyPress={(e) => {
-                if (!/[0-9\-]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-              onBlur={(e) => {
-                const value = e.target.value;
-                if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                  setErrors(prev => ({
-                    ...prev,
-                    fechaFin: 'Formato de fecha inválido. Use YYYY-MM-DD'
-                  }));
-                }
-              }}
+              placeholder="dd/mm/aaaa"
             />
             {errors.fechaFin && <p className="text-xs text-red-600 mt-1">{errors.fechaFin}</p>}
           </div>
