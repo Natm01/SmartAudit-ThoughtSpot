@@ -168,15 +168,15 @@ const ValidationPage = () => {
         showUserSelector={true}
       />
       
-      <main className="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
+      <main className="flex-1 [&_*]:text-xs [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm">
+        <div className="space-y-6 max-w-full mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 py-8">
           {/* Breadcrumb Navigation */}
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-4">
               <li>
                 <div>
                   <a href="/" className="text-gray-400 hover:text-gray-500">
-                    <svg className="flex-shrink-0 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="flex-shrink-0 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
                     </svg>
                     <span className="sr-only">Inicio</span>
@@ -185,7 +185,7 @@ const ValidationPage = () => {
               </li>
               <li>
                 <div className="flex items-center">
-                  <svg className="flex-shrink-0 h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="flex-shrink-0 w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
                   </svg>
                   <a href="/libro-diario" className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">
@@ -195,7 +195,7 @@ const ValidationPage = () => {
               </li>
               <li>
                 <div className="flex items-center">
-                  <svg className="flex-shrink-0 h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="flex-shrink-0 w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
                   </svg>
                   <span className="ml-4 text-sm font-medium text-gray-500">
@@ -208,7 +208,7 @@ const ValidationPage = () => {
 
           {/* Header con información del usuario */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Validación de Archivos Contables</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Validación de Archivos Contables</h1>
             <p className="mt-2 text-sm text-gray-600">
               Proyecto: {executionData?.projectName} • Período: {executionData?.period}
             </p>
@@ -249,7 +249,7 @@ const ValidationPage = () => {
 
           {/* Validation Content */}
           {executionData && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-full mx-auto px-6 sm:px-8 lg:px-12 xl:px-16">
               {/* Validación de Libro Diario - Desplegable completo */}
               <ValidationPhases
                 fileType="libro_diario"
@@ -292,18 +292,7 @@ const ValidationPage = () => {
                           Los datos están listos para ser convertidos al formato estándar.
                         </p>
                       </div>
-                    </div>
-                    
-                    <button 
-                      onClick={handleProceedToResults}
-                      className="px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                    >
-                      <span>Continuar a Resultados</span>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
+                    </div></div>
                 </div>
               )}
             </div>
@@ -321,17 +310,14 @@ const ValidationPage = () => {
               Volver a Importación
             </button>
             
-            {canProceed && (
-              <button 
-                onClick={handleProceedToResults}
-                className="flex items-center px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            <button onClick={handleProceedToResults} disabled={!canProceed}
+                className="disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-700 flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-600 transition-colors"
               >
                 Continuar a Resultados
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-            )}
           </div>
         </div>
       </main>
