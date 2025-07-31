@@ -6,7 +6,7 @@
     "role": "AUDITOR_SPA",
     "roleName": "Auditor SPA",
     "department": "Auditoría",
-    "projects": ["00041796", "00041792", "00042921", "00042910", "00042861"],
+    "projects": ["00038150", "00037942", "00038455", "00042910", "00042861"],
     "permissions": {
       "canAccessLibroDiario": true,
       "canAccessAnalisisJET": true,
@@ -27,7 +27,7 @@
     "role": "SENIOR_AUDITOR",
     "roleName": "Auditor Senior",
     "department": "Auditoría",
-    "projects": ["00041796", "00041792"],
+    "projects": ["00038150", "00037942", "00038455", "00042910"],
     "permissions": {
       "canAccessLibroDiario": true,
       "canAccessAnalisisJET": false,
@@ -48,7 +48,7 @@
     "role": "JUNIOR_AUDITOR",
     "roleName": "Auditor Junior",
     "department": "Auditoría",
-    "projects": ["00042921"],
+    "projects": ["00038150", "00037942", "00038455", "00038455", "00042921"],
     "permissions": {
       "canAccessLibroDiario": true,
       "canAccessAnalisisJET": false,

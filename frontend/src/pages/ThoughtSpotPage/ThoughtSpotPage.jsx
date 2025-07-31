@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LiveboardEmbed } from '@thoughtspot/visual-embed-sdk/react';
+import { init, prefetch } from '@thoughtspot/visual-embed-sdk';
 import Header from '../../components/Header/Header';
 import userService from '../../services/userService';
 

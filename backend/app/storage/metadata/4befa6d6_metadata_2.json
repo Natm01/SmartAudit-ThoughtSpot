@@ -1,0 +1,15 @@
+{
+  "executionId": "4befa6d6",
+  "projectId": "00038150",
+  "testType": "libro_diario_import",
+  "period": "2025-07-01 a 2025-07-31",
+  "version": 1,
+  "originalFileName": "SumasSaldos_CasadeLincora.xlsx",
+  "fileType": "xlsx",
+  "fileSize": 24200,
+  "uploadDate": "2025-07-31T13:02:52.222163",
+  "userId": "maria.garcia",
+  "userName": "María García",
+  "status": "pending",
+  "filePath": "C:\\Users\\mngonzalez\\Downloads\\smartaudit-project\\smartaudit\\backend\\app\\services\\..\\storage\\files\\4befa6d6_SumasSaldos_CasadeLincora_2.xlsx"
+}

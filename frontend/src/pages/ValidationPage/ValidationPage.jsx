@@ -212,11 +212,6 @@ const ValidationPage = () => {
             <p className="mt-2 text-sm text-gray-600">
               Proyecto: {executionData?.projectName} • Período: {executionData?.period}
             </p>
-            {user && (
-              <p className="text-sm text-gray-500 mt-1">
-                Usuario: {user.name} ({user.roleName})
-              </p>
-            )}
           </div>
 
           {/* Progress Steps */}

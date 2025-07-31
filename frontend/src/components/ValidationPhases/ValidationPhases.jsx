@@ -52,6 +52,13 @@ const ValidationPhases = ({ fileType, onComplete }) => {
           "Horas con formato correcto",
           "Importes con formato correcto"
         ]
+      }, 
+      {
+        id: 2,
+        name: "Validaciones de Integridad Contable",
+        validations: [
+          "Saldos balanceados"
+        ]
       }
     ]
   };

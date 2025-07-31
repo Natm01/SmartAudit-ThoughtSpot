@@ -13,8 +13,9 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
 
   // Campos de base de datos exactos (nombres de columnas reales)
   const databaseFields = {
+    // Campos para Libro Diario
     'journal_entry_id': 'journal_entry_id',
-    'line_number': 'line_number',
+    'line_number': 'line_number', 
     'description': 'description',
     'line_description': 'line_description',
     'posting_date': 'posting_date',
@@ -28,7 +29,6 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
     'vendor_id': 'vendor_id',
     'period_number': 'period_number',
     'gl_account_name': 'gl_account_name',
-    // Campos adicionales identificados
     'company_code': 'company_code',
     'currency': 'currency',
     'status_indicator': 'status_indicator',
@@ -41,7 +41,11 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
     'clearing_document': 'clearing_document',
     'clearing_date': 'clearing_date',
     'assignment_field': 'assignment_field',
-    'additional_code': 'additional_code'
+    'additional_code': 'additional_code',
+    
+    // Campos específicos para Sumas y Saldos
+    'period_beginning_balance': 'period_beginning_balance',
+    'period_ending_balance': 'period_ending_balance'
   };
 
   useEffect(() => {
@@ -92,24 +96,70 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
   };
 
   const parseExcelFile = async () => {
-    const mockHeaders = ['CUENTA', 'DESCRIPCIÓN', 'SALDO INICIAL DEBE', 'SALDO INICIAL HABER', 'MOVIM. DEBE', 'MOVIM. HABER', 'SALDO FINAL DEBE', 'SALDO FINAL HABER'];
-    const mockData = [];
+    // TODAS las columnas originales exactas del archivo RFBILA00
+    const headers = [
+      'Posición', 'Texto p.posición balance/PyG', 'PlCt', 'Nº cuenta', 'Grp.', 'Cta.grp.', 
+      'PlC2', 'Cta.alt.', 'Soc.', 'Div.', 'Área func.', 'Año', 'Período', 'Tp.moneda', 
+      'Mon.', 'TotPerInf', 'TotPerComp', 'Desv. absoluta', 'Desv.rel.', 'Desv.rel.', 'Informe totales'
+    ];
     
-    for (let i = 1; i <= 10; i++) {
-      const accountNumber = `${43000000 + i}`.padStart(8, '0');
-      mockData.push([
-        accountNumber,
-        `Cuenta contable ${i}`,
-        `${(Math.random() * 10000).toFixed(2)}`,
-        `${(Math.random() * 5000).toFixed(2)}`,
-        `${(Math.random() * 15000).toFixed(2)}`,
-        `${(Math.random() * 12000).toFixed(2)}`,
-        `${(Math.random() * 8000).toFixed(2)}`,
-        `${(Math.random() * 3000).toFixed(2)}`
-      ]);
-    }
+    // Datos exactos del archivo original RFBILA00 (primeras filas)
+    const originalData = [
+      ['1', 'A C T I V O', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['1', '===========', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['12', 'Inmovilizado', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['12', '============', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['121', 'Gastos de establecimiento', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['121', '-------------------------', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['121', '2060000000 APLICACIONES INFORMÁTICAS', 'BERG', '2060000000', 'CONS', '206000N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '1.161.504,24', '1.161.504,24', '0,00', '0,0', '0,0', ''],
+      ['121', '', '', '', '', '', '', '', '', '', '', '', '', '10', 'EUR', '1.161.504,24', '1.161.504,24', '0,00', '0,0', '0,0', '3'],
+      ['122', 'Inmovilizaciones inmateriales', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['122', '-----------------------------', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['1222', 'Concesiones, patentes, licencias, marcas y s.', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['1222', '2110000000 CONSTRUCCIONES', 'BERG', '2110000000', 'CONS', '211000N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '587.229,69', '587.229,69', '0,00', '0,0', '0,0', ''],
+      ['1222', '2120000000 INSTALACIONES TÉCNICAS', 'BERG', '2120000000', 'CONS', '212000N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '0,00', '25.534,00', '25.534,00-', '100,0-', '100,0-', ''],
+      ['1222', '', '', '', '', '', '', '', '', '', '', '', '', '10', 'EUR', '587.229,69', '612.763,69', '25.534,00-', '4,2-', '4,2-', '4'],
+      ['1225', 'Aplicaciones informáticas', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['1225', '2150000000 OTRAS INSTALACIONES', 'BERG', '2150000000', 'CONS', '215000N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '314.607,14', '527.537,47', '212.930,33-', '40,4-', '40,4-', ''],
+      ['1225', '', '', '', '', '', '', '', '', '', '', '', '', '10', 'EUR', '314.607,14', '527.537,47', '212.930,33-', '40,4-', '40,4-', '4'],
+      ['1229', 'Bienes en régimen de arrendamiento financiero', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['1229', '2170000000 EQUIPOS PARA PROCESOS DE INFORMACIÓN', 'BERG', '2170000000', 'CONS', '217000N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '44.946,14', '68.430,82', '23.484,68-', '34,3-', '34,3-', ''],
+      ['1229', '', '', '', '', '', '', '', '', '', '', '', '', '10', 'EUR', '44.946,14', '68.430,82', '23.484,68-', '34,3-', '34,3-', '4'],
+      ['1228', 'Amortizaciones', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0,0', ''],
+      ['1228', '2811000000 AMORTIZACIÓN ACUMULADA CONSTRUCCIONES', 'BERG', '2811000000', 'CONS', '281100N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '508.093,69-', '389.388,69-', '118.705,00-', '30,5-', '30,5-', ''],
+      ['1228', '2812000000 AMORTIZACIÓN ACUMULADA INSTALACIONES TÉCNICAS', 'BERG', '2812000000', 'CONS', '281200N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '0,00', '25.534,00-', '25.534,00', '100,0', '100,0', ''],
+      ['1228', '2815000000 AMORTIZACIÓN ACUMULADA OTRAS INSTALACIONES', 'BERG', '2815000000', 'CONS', '281500N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '206.280,14-', '381.065,47-', '174.785,33', '45,9', '45,9', ''],
+      ['1228', '2816000000 AMORTIZACIÓN ACUMULADA MOBILIARIO', 'BERG', '2816000000', 'CONS', '281600N', 'BERG', '', 'OIVE', 'BCN', '', '', '16', '10', 'EUR', '0,00', '3.903,00-', '3.903,00', '100,0', '100,0', '']
+    ];
+
+    // Datos limpios para después del mapeo
+    const cleanData = [
+      ['211', '1000000000 CAPITAL SOCIAL', 'BERG', '1000000000', 'CONS', '1000000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-3.006,00', '-3.006,00', '0,00', '0,0', '0,0', ''],
+      ['2145', '1130000000 RESERVAS VOLUNTARIAS', 'BERG', '1130000000', 'CONS', '1130000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-', '-130.900,75', '-130.900,75', '', '0,0', '4'],
+      ['-', '1180000000 APORTACION DE SOCIOS', 'BERG', '1180000000', 'CONS', '1180000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-', '-', '0,00', '0,0', '0,0', ''],
+      ['-', '1210000000 Resultados neg. ej.ant.', 'BERG', '1210000000', 'CONS', '1210000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-', '-', '0,00', '0,0', '0,0', ''],
+      ['-', '1290000000 Pérdidas y ganancias', 'BERG', '1290000000', 'CONS', '1290000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '142.067,04', '-', '142.067,04', '', '0,0', '3'],
+      ['2303', '1420000000 Provisión responsab.', 'BERG', '1420000000', 'CONS', '1420000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-', '-65.035,12', '-65.035,12', '', '0,0', ''],
+      ['2303', '1420010000 Prov por responsabil', 'BERG', '1420010000', 'CONS', '1420000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-65.035,12', '-', '65.035,12', '100,0', '100,0', ''],
+      ['2432', '1633010000 OTR.DEU L/P, EMP.GR.', 'BERG', '1633010000', 'CONS', '1633000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-1.000.000,00', '-1.000.000,00', '0,00', '0,0', '0,0', ''],
+      ['2432', '1633200000 OTR.DEU.PAR.L/P. EG.', 'BERG', '1633200000', 'CONS', '1633200N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-272.967,79', '-', '272.967,79', '100,0', '100,0', ''],
+      ['121', '2060000000 Aplicaciones inform', 'BERG', '2060000000', 'CONS', '2060000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '1.161.504,24', '1.161.504,24', '0,00', '0,0', '0,0', ''],
+      ['1222', '2110000000 Construcciones', 'BERG', '2110000000', 'CONS', '2110000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '587.229,69', '587.229,69', '0,00', '0,0', '0,0', ''],
+      ['1222', '2120000000 Instal. Técnicas', 'BERG', '2120000000', 'CONS', '2120000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '25.534,00', '-', '25.534,00', '100,0', '100,0', ''],
+      ['1225', '2150000000 Otras Instalaciones', 'BERG', '2150000000', 'CONS', '2150000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '527.537,47', '314.607,14', '212.930,33', '40,4', '40,4', '4'],
+      ['-', '2160000000 Mobiliario', 'BERG', '2160000000', 'CONS', '2160000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '3.903,00', '-', '3.903,00', '100,0', '100,0', ''],
+      ['1229', '2170000000 EPI', 'BERG', '2170000000', 'CONS', '2170000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '68.430,82', '44.946,14', '23.484,68', '34,3', '34,3', ''],
+      ['1245', '2500010000 Partic.empresas CME', 'BERG', '2500010000', 'CONS', '2500010N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '120,22', '-', '120,22', '100,0', '100,0', ''],
+      ['1247', '2600010000 Dep y fin L/P', 'BERG', '2600010000', 'CONS', '2600010N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '191.020,00', '191.020,00', '0,00', '0,0', '0,0', ''],
+      ['0', '2806000000 AA Apl infor', 'BERG', '2806000000', 'CONS', '2806000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-548.488,24', '-935.656,24', '-387.168,00', '70,6', '70,6', ''],
+      ['1228', '2811000000 AA Construcciones', 'BERG', '2811000000', 'CONS', '2811000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-389.388,69', '-508.093,69', '-118.705,00', '30,5', '30,5', ''],
+      ['1228', '2812000000 AA inst técnicas', 'BERG', '2812000000', 'CONS', '2812000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-25.534,00', '-', '-25.534,00', '100,0', '100,0', ''],
+      ['1228', '2815000000 AA otras inst', 'BERG', '2815000000', 'CONS', '2815000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-381.065,47', '-206.280,14', '-174.785,33', '45,9', '45,9', ''],
+      ['1228', '2816000000 AA mobiliario', 'BERG', '2816000000', 'CONS', '2816000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-3.903,00', '-', '-3.903,00', '100,0', '100,0', ''],
+      ['1228', '2817000000 AA eq.proc.Inf', 'BERG', '2817000000', 'CONS', '2817000N', 'BERG', '-', 'OIVE', 'BCN', '-', '-', '16', '10', 'EUR', '-67.682,82', '-44.530,14', '-23.152,68', '34,2', '34,2', '']
+    ];
     
-    return { headers: mockHeaders, data: mockData };
+    return { headers, originalData, cleanData };
   };
 
   const loadPreviewData = async () => {
@@ -125,11 +175,26 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
         result = await parseExcelFile();
       }
       
-      if (!result || !result.headers || !result.data) {
+      if (!result || !result.headers || (!result.originalData && !result.data)) {
         throw new Error('No se pudo procesar el archivo');
       }
       
-      setPreviewData(result);
+      // Normalizar la estructura de datos
+      if (result.originalData) {
+        // Para Sumas y Saldos - tiene datos originales y limpios
+        setPreviewData({
+          headers: result.headers,
+          originalData: result.originalData,
+          cleanData: result.cleanData
+        });
+      } else {
+        // Para Libro Diario - solo tiene un conjunto de datos
+        setPreviewData({
+          headers: result.headers,
+          originalData: result.data,
+          cleanData: result.data
+        });
+      }
     } catch (err) {
       console.error('Error loading preview:', err);
       setError(err.message);
@@ -155,13 +220,61 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
   const getDisplayHeaders = () => {
     if (!previewData || !previewData.headers) return [];
     
-    return previewData.headers.map(originalHeader => {
-      if (showMappedNames && fieldMappings[originalHeader]) {
-        const mappedField = fieldMappings[originalHeader];
-        return databaseFields[mappedField] || mappedField;
+    if (!showMappedNames) {
+      // Sin mapeo: mostrar headers originales en orden original
+      return previewData.headers;
+    } else {
+      // Con mapeo: columnas mapeadas primero, luego las demás
+      const mappedHeaders = [];
+      const unmappedHeaders = [];
+      
+      previewData.headers.forEach(originalHeader => {
+        if (fieldMappings[originalHeader]) {
+          // Es una columna mapeada - usar nombre de BD
+          const mappedField = fieldMappings[originalHeader];
+          mappedHeaders.push(databaseFields[mappedField] || mappedField);
+        } else {
+          // No mapeada - mantener nombre original
+          unmappedHeaders.push(originalHeader);
+        }
+      });
+      
+      // Columnas mapeadas primero, luego las no mapeadas
+      return [...mappedHeaders, ...unmappedHeaders];
+    }
+  };
+
+  const getDisplayData = () => {
+    if (!previewData || !previewData.originalData) {
+      return [];
+    }
+    
+    // Usar datos originales si no hay mapeo, datos limpios si hay mapeo
+    const currentData = showMappedNames ? previewData.cleanData : previewData.originalData;
+    
+    if (!showMappedNames) {
+      // Sin mapeo: mostrar datos originales en orden original
+      return currentData;
+    }
+    
+    // Con mapeo: reordenar los datos según el nuevo orden de headers
+    const mappedColumnIndices = [];
+    const unmappedColumnIndices = [];
+    
+    previewData.headers.forEach((originalHeader, index) => {
+      if (fieldMappings[originalHeader]) {
+        mappedColumnIndices.push(index);
+      } else {
+        unmappedColumnIndices.push(index);
       }
-      return originalHeader;
     });
+    
+    // Reordenar datos: columnas mapeadas primero, luego las demás
+    const reorderedIndices = [...mappedColumnIndices, ...unmappedColumnIndices];
+    
+    return currentData.map(row => 
+      reorderedIndices.map(index => row[index] || '-')
+    );
   };
 
   const getFileTypeLabel = () => {
@@ -204,13 +317,14 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
         </div>
       )}
 
-      {/* FieldMapper Component - Solo para libro diario */}
-      {fileType === 'libro_diario' && previewData && (
+      {/* FieldMapper Component - Para ambos tipos de archivo */}
+      {previewData && (
         <FieldMapper
           originalFields={previewData.headers}
           onMappingChange={handleMappingChange}
           isOpen={isMapperOpen}
           onToggle={() => setIsMapperOpen(!isMapperOpen)}
+          fileType={fileType} // Pasamos el fileType para que FieldMapper sepa qué mapeos mostrar
         />
       )}
 
@@ -226,39 +340,37 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
               <p className="text-sm text-gray-600 mt-1">
                 Mostrando {getMaxRowsLabel()}
               </p>
-              {fileType === 'libro_diario' && getMappedFieldsCount() > 0 && (
+              {getMappedFieldsCount() > 0 && (
                 <p className="text-xs text-blue-600 mt-1">
                   ✓ {getMappedFieldsCount()} campos mapeados a nombres de base de datos {showMappedNames ? '(Aplicado)' : '(Pendiente de aplicar)'}
                 </p>
               )}
             </div>
             <div className="flex items-center space-x-2">
-              {fileType === 'libro_diario' && (
-                <button
-                  onClick={() => setShowMappedNames(!showMappedNames)}
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    showMappedNames
-                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  {showMappedNames ? (
-                    <>
-                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Nombres Base de Datos
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h4a1 1 0 011 1v2h4a1 1 0 110 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 110-2h4z" />
-                      </svg>
-                      Nombres originales
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                onClick={() => setShowMappedNames(!showMappedNames)}
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  showMappedNames
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                {showMappedNames ? (
+                  <>
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Nombres Base de Datos
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h4a1 1 0 011 1v2h4a1 1 0 110 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 110-2h4z" />
+                    </svg>
+                    Nombres originales
+                  </>
+                )}
+              </button>
               <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                 fileType === 'libro_diario' 
                   ? 'bg-blue-100 text-blue-800' 
@@ -309,12 +421,10 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
                     <span className="font-medium text-gray-700">Tipo:</span>
                     <p className="text-gray-900">{getFileTypeLabel()}</p>
                   </div>
-                  {fileType === 'libro_diario' && (
-                    <div>
-                      <span className="font-medium text-gray-700">Mapeados:</span>
-                      <p className="text-gray-900">{getMappedFieldsCount()}/{previewData.headers.length}</p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="font-medium text-gray-700">Mapeados:</span>
+                    <p className="text-gray-900">{getMappedFieldsCount()}/{previewData.headers.length}</p>
+                  </div>
                   <div>
                     <span className="font-medium text-gray-700">Estado:</span>
                     <p className="text-green-600">✓ Formato válido</p>
@@ -332,8 +442,22 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
                           #
                         </th>
                         {getDisplayHeaders().map((header, index) => {
-                          const originalHeader = previewData.headers[index];
-                          const isMapped = showMappedNames && fieldMappings[originalHeader];
+                          // Determinar si esta columna está mapeada
+                          const isMapped = showMappedNames && Object.values(fieldMappings).some(mappedField => 
+                            databaseFields[mappedField] === header
+                          );
+                          
+                          // Encontrar el header original para el tooltip
+                          let originalHeader = header;
+                          if (isMapped) {
+                            // Buscar el header original que se mapeó a este
+                            const foundMapping = Object.entries(fieldMappings).find(([_, mappedField]) => 
+                              databaseFields[mappedField] === header
+                            );
+                            if (foundMapping) {
+                              originalHeader = foundMapping[0];
+                            }
+                          }
                           
                           return (
                             <th
@@ -357,20 +481,31 @@ const FilePreview = ({ file, fileType, executionId, maxRows = 25 }) => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {previewData.data.map((row, rowIndex) => (
+                      {getDisplayData().map((row, rowIndex) => (
                         <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                           <td className="px-2 py-1 text-xs text-gray-500 font-mono sticky left-0 bg-inherit z-10">
                             {rowIndex + 1}
                           </td>
-                          {row.map((cell, cellIndex) => (
-                            <td
-                              key={cellIndex}
-                              className="px-2 py-1 text-xs text-gray-900 whitespace-nowrap min-w-20"
-                              title={cell || ''}
-                            >
-                              {cell || '-'}
-                            </td>
-                          ))}
+                          {row.map((cell, cellIndex) => {
+                            // Determinar si esta columna está mapeada para el estilo
+                            const displayHeaders = getDisplayHeaders();
+                            const currentHeader = displayHeaders[cellIndex];
+                            const isMappedColumn = showMappedNames && Object.values(fieldMappings).some(mappedField => 
+                              databaseFields[mappedField] === currentHeader
+                            );
+                            
+                            return (
+                              <td
+                                key={cellIndex}
+                                className={`px-2 py-1 text-xs whitespace-nowrap min-w-20 ${
+                                  isMappedColumn ? 'text-blue-900 font-medium' : 'text-gray-900'
+                                }`}
+                                title={cell || ''}
+                              >
+                                {cell || '-'}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>

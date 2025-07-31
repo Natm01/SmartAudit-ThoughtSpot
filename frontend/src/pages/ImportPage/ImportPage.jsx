@@ -261,11 +261,6 @@ const ImportPage = () => {
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Importación Libro Diario</h1>
             <p className="text-gray-600">Carga y valida tus archivos contables de forma automática</p>
-            {user && (
-              <p className="text-sm text-gray-500 mt-2">
-                Usuario actual: {user.name} ({user.roleName})
-              </p>
-            )}
           </div>
 
           {/* Indicador de pasos */}
